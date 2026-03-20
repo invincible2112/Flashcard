@@ -3,50 +3,149 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Deutsch Pro v2</title>
+<title>Deutsch Learning App</title>
+
 <style>
-body{font-family:system-ui;background:#0f172a;color:#fff;margin:0}
-.container{max-width:420px;margin:auto;padding:20px}
-.card{background:#1e293b;padding:30px;border-radius:20px;text-align:center}
-.top{display:flex;justify-content:space-between;margin-bottom:10px}
-button,select,input{padding:10px;border-radius:10px;border:none;margin:5px}
-.progress{height:8px;background:#334155;border-radius:10px;overflow:hidden;margin:10px 0}
-.bar{height:100%;background:#22c55e;width:0%}
+body{
+  margin:0;
+  font-family:system-ui;
+  background:#0f172a;
+  color:#fff;
+}
+
+.container{
+  max-width:420px;
+  margin:auto;
+  padding:20px;
+}
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:10px;
+}
+
+select{
+  padding:8px;
+  border-radius:8px;
+}
+
+.card{
+  background:#1e293b;
+  border-radius:20px;
+  padding:25px;
+  text-align:center;
+  margin-top:10px;
+}
+
+.word{
+  font-size:28px;
+  font-weight:bold;
+}
+
+.meaning{
+  margin-top:10px;
+  font-size:18px;
+  color:#94a3b8;
+}
+
+.example{
+  margin-top:10px;
+  font-size:15px;
+  color:#cbd5f5;
+}
+
+.grammar{
+  margin-top:10px;
+  font-size:14px;
+  color:#fbbf24;
+}
+
+.actions{
+  margin-top:15px;
+  display:flex;
+  justify-content:center;
+  gap:10px;
+}
+
+button{
+  padding:10px 15px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+}
+
+.primary{background:#6366f1;color:#fff;}
+.success{background:#22c55e;color:#fff;}
+.danger{background:#ef4444;color:#fff;}
+
+input{
+  width:100%;
+  padding:10px;
+  margin-top:10px;
+  border-radius:10px;
+  border:none;
+}
+
+.progress{
+  height:6px;
+  background:#334155;
+  border-radius:10px;
+  margin-top:10px;
+}
+
+.bar{
+  height:100%;
+  background:#22c55e;
+  width:0%;
+}
+
+.section-title{
+  font-size:13px;
+  color:#94a3b8;
+  margin-top:15px;
+}
 </style>
+
 </head>
+
 <body>
 
 <div class="container">
 
-<div class="top">
+<div class="header">
 <select id="level"></select>
+
 <select id="mode">
-<option value="exam">🎓</option>
-<option value="talk">💬</option>
+<option value="exam">🎓 Thi</option>
+<option value="talk">💬 Giao tiếp</option>
 </select>
 </div>
 
 <div class="progress"><div class="bar" id="bar"></div></div>
 
 <div class="card">
-<h2 id="word"></h2>
-<p id="meaning" style="display:none"></p>
-<p id="example" style="display:none;color:#94a3b8"></p>
+
+<div class="word" id="word"></div>
+
+<div class="meaning" id="meaning"></div>
+
+<div class="example" id="example"></div>
+
+<div class="grammar" id="grammar"></div>
+
+<div class="actions">
+<button class="primary" onclick="speak()">🔊 Nghe</button>
+<button class="primary" onclick="toggleMeaning()">👁️ Hiện / Ẩn nghĩa</button>
 </div>
 
-<div style="text-align:center">
-<button onclick="flip()">👁️</button>
-<button onclick="speak()">🔊</button>
+<input id="input" placeholder="Gõ lại từ tiếng Đức..." />
+
+<div class="actions">
+<button class="success" onclick="answer(true)">✔ Tôi đúng</button>
+<button class="danger" onclick="answer(false)">✘ Tôi sai</button>
 </div>
 
-<div style="text-align:center">
-<input id="input" placeholder="Type..." />
-<button onclick="check()">OK</button>
-</div>
-
-<div style="text-align:center">
-<button onclick="answer(true)">✔</button>
-<button onclick="answer(false)">✘</button>
 </div>
 
 </div>
@@ -56,26 +155,21 @@ button,select,input{padding:10px;border-radius:10px;border:none;margin:5px}
 const DATA = {
 A1:{
 exam:[
-{w:"Haus",m:"nhà",ex:"Das Haus ist groß."},
-{w:"gehen",m:"đi",ex:"Ich gehe nach Hause."},
-{w:"essen",m:"ăn",ex:"Ich esse Brot."},
-{w:"trinken",m:"uống",ex:"Ich trinke Wasser."}
+{w:"Haus",m:"nhà",ex:"Das Haus ist groß.",g:"das + Nomen"},
+{w:"gehen",m:"đi",ex:"Ich gehe nach Hause.",g:"Verb: gehen"}
 ],
 talk:[
-{w:"Hallo",m:"xin chào",ex:"Hallo! Wie geht's?"},
-{w:"Danke",m:"cảm ơn",ex:"Danke für deine Hilfe!"},
-{w:"Tschüss",m:"tạm biệt",ex:"Tschüss! Bis später."}
+{w:"Hallo",m:"xin chào",ex:"Hallo! Wie geht's?",g:"Chào hỏi"},
+{w:"Danke",m:"cảm ơn",ex:"Danke für deine Hilfe!",g:"Lịch sự"}
 ]
 },
 A2:{
 exam:[
-{w:"lernen",m:"học",ex:"Ich lerne Deutsch."},
-{w:"arbeiten",m:"làm việc",ex:"Ich arbeite viel."},
-{w:"reisen",m:"du lịch",ex:"Ich reise gern."}
+{w:"lernen",m:"học",ex:"Ich lerne Deutsch.",g:"Verb: lernen"},
+{w:"arbeiten",m:"làm việc",ex:"Ich arbeite viel.",g:"Verb: arbeiten"}
 ],
 talk:[
-{w:"Was machst du?",m:"Bạn làm gì?",ex:"Was machst du heute?"},
-{w:"Keine Ahnung",m:"không biết",ex:"Ich habe keine Ahnung."}
+{w:"Was machst du?",m:"Bạn làm gì?",ex:"Was machst du heute?",g:"Câu hỏi hiện tại"}
 ]
 }
 };
@@ -83,80 +177,70 @@ talk:[
 let level = localStorage.level || "A1";
 let mode = localStorage.mode || "exam";
 
-let progress = JSON.parse(localStorage.getItem("progress") || "{}");
-
-function key(){
-  return level + "_" + mode;
-}
-
-function getState(){
-  if(!progress[key()]) progress[key()] = {i:0,correct:0};
-  return progress[key()];
-}
+let index = 0;
+let correct = 0;
 
 function renderLevels(){
-  let sel=document.getElementById("level");
-  ["A1","A2"].forEach(l=>{
-    let opt=document.createElement("option");
-    opt.value=l;
-    opt.text=l;
-    if(l===level) opt.selected=true;
-    sel.appendChild(opt);
-  });
+let sel=document.getElementById("level");
+["A1","A2"].forEach(l=>{
+let o=document.createElement("option");
+o.value=l;
+o.text=l;
+if(l===level) o.selected=true;
+sel.appendChild(o);
+});
 }
 
 function render(){
-  let state=getState();
-  let list=DATA[level][mode];
-  let c=list[state.i];
+let card = DATA[level][mode][index];
 
-  word.innerText=c.w;
-  meaning.innerText=c.m;
-  example.innerText=c.ex;
+word.innerText = card.w;
+meaning.innerText = card.m;
+example.innerText = "Ví dụ: " + card.ex;
+grammar.innerText = "Ngữ pháp: " + card.g;
 
-  bar.style.width=(state.correct/list.length)*100+"%";
+meaning.style.display="none";
+example.style.display="none";
+grammar.style.display="none";
 
-  localStorage.setItem("progress",JSON.stringify(progress));
+bar.style.width = (correct / DATA[level][mode].length) * 100 + "%";
 }
 
-function flip(){
-  meaning.style.display="block";
-  example.style.display="block";
+function toggleMeaning(){
+let visible = meaning.style.display === "block";
+
+meaning.style.display = visible ? "none" : "block";
+example.style.display = visible ? "none" : "block";
+grammar.style.display = visible ? "none" : "block";
 }
 
 function speak(){
-  let u=new SpeechSynthesisUtterance(word.innerText);
-  u.lang="de-DE";
-  speechSynthesis.speak(u);
-}
-
-function check(){
-  let val=input.value.toLowerCase();
-  if(val===word.innerText.toLowerCase()){
-    alert("✅");
-  }else{
-    alert("❌ "+word.innerText);
-  }
+let utter = new SpeechSynthesisUtterance(word.innerText);
+utter.lang = "de-DE";
+speechSynthesis.speak(utter);
 }
 
 function answer(ok){
-  let state=getState();
-  if(ok) state.correct++;
-  state.i = (state.i+1) % DATA[level][mode].length;
-  render();
+if(ok) correct++;
+
+index = (index + 1) % DATA[level][mode].length;
+
+render();
 }
 
 document.getElementById("level").onchange = e=>{
-  level=e.target.value;
-  localStorage.level=level;
-  location.reload();
-}
+level = e.target.value;
+localStorage.level = level;
+index = 0;
+render();
+};
 
 document.getElementById("mode").onchange = e=>{
-  mode=e.target.value;
-  localStorage.mode=mode;
-  location.reload();
-}
+mode = e.target.value;
+localStorage.mode = mode;
+index = 0;
+render();
+};
 
 renderLevels();
 render();
