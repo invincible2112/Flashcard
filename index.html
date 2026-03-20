@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Deutsch Flashcard Pro (SRS)</title>
+<style>
+:root{--bg:#0f172a;--card:#1e293b;--text:#fff;--sub:#94a3b8;--accent:#6366f1;--green:#22c55e;--red:#ef4444}
+body{margin:0;font-family:Inter,system-ui;background:var(--bg);color:var(--text);display:flex;justify-content:center;align-items:center;height:100vh}
+.container{width:360px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+select{padding:6px;border-radius:8px}
+.card{background:var(--card);padding:30px;border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.3);text-align:center}
+.word{font-size:28px;margin-bottom:10px}
+.meaning{font-size:18px;color:var(--sub);display:none}
+.buttons{display:flex;gap:10px;margin-top:15px}
+.btn{flex:1;padding:10px;border:none;border-radius:10px;color:#fff;cursor:pointer}
+.btn.ok{background:var(--green)}
+.btn.no{background:var(--red)}
+.progress,.xp{font-size:13px;color:var(--sub);text-align:center;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="top">
+    <select id="levelSelect" onchange="changeLevel(this.value)">
+      <option>A1</option><option>A2</option><option>B1</option><option>B2</option><option>C1</option><option>C2</option>
+    </select>
+    <div id="goal">🔥 0/20</div>
+  </div>
+
+  <div class="card" id="card" onclick="flip()">
+    <div class="word" id="word"></div>
+    <div class="meaning" id="meaning"></div>
+  </div>
+
+  <div class="buttons">
+    <button class="btn ok" onclick="next(true)">✔</button>
+    <button class="btn no" onclick="next(false)">✘</button>
+  </div>
+
+  <div class="progress" id="progress"></div>
+  <div class="xp" id="xp"></div>
+</div>
+
+<script>
+const DATA={
+  A1:[{w:"Haus",m:"nhà"},{w:"gehen",m:"đi"}],
+  B1:[{w:"Verantwortung",m:"trách nhiệm"}]
+};
+
+const SRS=[0,1,3,7,14,30];
+
+let level=localStorage.getItem('level')||'A1';
+let index=0;
+
+function key(n){return n+"_"+level}
+
+let score=JSON.parse(localStorage.getItem(key('srs'))||"{}");
+let due=JSON.parse(localStorage.getItem(key('due'))||"{}");
+
+let xp=parseInt(localStorage.getItem(key('xp'))||0);
+let streak=parseInt(localStorage.getItem(key('streak'))||0);
+
+let todayKey='done_'+new Date().toDateString();
+let done=parseInt(localStorage.getItem(todayKey)||0);
+
+function getCards(){return DATA[level]||[]}
+function id(i){return getCards()[i].w}
+
+function ensure(){
+  getCards().forEach((_,i)=>{
+    let k=id(i);
+    if(score[k]==null) score[k]=0;
+    if(!due[k]) due[k]=Date.now();
+  })
+}
+ensure();
+
+function getQueue(){
+  let now=Date.now();
+  return getCards().map((_,i)=>i).filter(i=>due[id(i)]<=now);
+}
+
+function render(){
+  let cards=getCards();
+  if(cards.length===0)return;
+
+  let q=getQueue();
+  if(q.length===0){
+    document.getElementById('word').textContent="🎉 Hết bài hôm nay";
+    document.getElementById('meaning').style.display='none';
+    return;
+  }
+
+  index=q[0];
+  document.getElementById('word').textContent=cards[index].w;
+  document.getElementById('meaning').textContent=cards[index].m;
+  document.getElementById('meaning').style.display='none';
+
+  document.getElementById('goal').textContent=`🔥 ${done}/20`;
+  document.getElementById('progress').textContent=`Còn ${q.length} từ`;
+  document.getElementById('xp').textContent=`XP: ${xp} | 🔥 ${streak}`;
+  document.getElementById('levelSelect').value=level;
+}
+
+function flip(){
+  document.getElementById('meaning').style.display='block';
+}
+
+function next(correct){
+  let k=id(index);
+
+  if(correct){
+    done++; xp+=10; streak++;
+    score[k]=Math.min(score[k]+1,SRS.length-1);
+    due[k]=Date.now()+SRS[score[k]]*86400000;
+    sound(true);
+  }else{
+    streak=0;
+    score[k]=0;
+    due[k]=Date.now();
+    sound(false);
+  }
+
+  localStorage.setItem(todayKey,done);
+  localStorage.setItem(key('xp'),xp);
+  localStorage.setItem(key('streak'),streak);
+  localStorage.setItem(key('srs'),JSON.stringify(score));
+  localStorage.setItem(key('due'),JSON.stringify(due));
+
+  render();
+}
+
+function changeLevel(l){
+  localStorage.setItem('level',l);
+  location.reload();
+}
+
+function sound(ok){
+  let a=new Audio(ok
+    ? 'https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg'
+    : 'https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg');
+  a.play();
+}
+
+let startX=0;
+const el=document.getElementById('card');
+el.addEventListener('touchstart',e=>startX=e.touches[0].clientX);
+el.addEventListener('touchend',e=>{
+  let diff=e.changedTouches[0].clientX-startX;
+  if(diff>80) next(true);
+  if(diff<-80) next(false);
+});
+
+render();
+</script>
+</body>
+</html>
